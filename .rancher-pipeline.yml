@@ -1,0 +1,30 @@
+stages:
+  - name: init
+    steps:
+      - runScriptConfig:
+          image: java:8
+          shellScript: |-
+            wget http://172.30.198.233/pub/time
+  - name: build
+    steps:
+      - runScriptConfig:
+          image: index.paas.zoomlion.com/zvtz/maven-zvos:3.3.9
+          args: '-v /data/maven:/root/.m2'
+          shellScript: |-
+            mvn clean package -Dmaven.test.skip=true -Pdev
+  - name: 打包
+    steps:
+      - publishImageConfig:
+          dockerfilePath: ./Dockerfile
+          buildContext: .
+          tag: cp/${CICD_GIT_REPO_NAME}:${CICD_GIT_COMMIT}
+          pushRemote: true
+          registry: index.paas.zoomlion.com
+        env:
+          PLUGIN_DEBUG: "true"
+          PLUGIN_INSECURE: "true"
+  - name: 部署
+    steps:
+      - applyYamlConfig:
+          path: ./deployment.yaml
+timeout: 60
