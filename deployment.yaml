@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   labels:
     cattle.io/creator: norman
-    workload.task.cattle.io/workloadselector: deployment-cp-member
-  name: member
-  namespace: cp
+    workload.task.cattle.io/workloadselector: deployment-tz-hera
+  name: hera
+  namespace: tz
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      workload.task.cattle.io/workloadselector: deployment-cp-member
+      workload.task.cattle.io/workloadselector: deployment-tz-hera
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -21,22 +21,23 @@ spec:
   template:
     metadata:
       annotations:
-        field.cattle.io/ports: '[[{"containerPort":8003,"dnsName":"member","kind":"ClusterIP","name":"8003tcp2","protocol":"TCP"}]]'
+        field.cattle.io/ports: '[[{"containerPort":8003,"dnsName":"hera","kind":"ClusterIP","name":"8003tcp2","protocol":"TCP"}]]'
       labels:
-        workload.task.cattle.io/workloadselector: deployment-cp-member
+        workload.task.cattle.io/workloadselector: deployment-tz-hera
     spec:
       containers:
         - command:
             - java
             - -Djava.security.egd=file:/dev/./urandom
             - -Dskywalking.trace.ignore_path=/eureka/**
+            - -server
             - -jar
-            - -Xms256m
-            - -Xmx512m
+            - -Xms4G
+            - -Xmx4G
+            - -Xmn2G
             - /app/app.jar
             - --eureka.instance.prefer-ip-address=true
             - --apollo.meta=http://10.39.52.71:8080
-            - --env=DEV
           env:
             - name: SW_AGENT_NAME
               valueFrom:
@@ -50,7 +51,7 @@ spec:
                   name: collector
           image: ${CICD_IMAGE}:${CICD_GIT_COMMIT}
           imagePullPolicy: IfNotPresent
-          name: member
+          name: hera
           ports:
             - containerPort: 8003
               name: 8003tcp2
@@ -65,17 +66,10 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           tty: true
-          volumeMounts:
-            - mountPath: /opt/baofu/cer
-              name: vol1
       dnsPolicy: ClusterFirst
       imagePullSecrets:
-        - name: zvos
+        - name: admin
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
-      volumes:
-        - name: vol1
-          persistentVolumeClaim:
-            claimName: test-pv

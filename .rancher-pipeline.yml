@@ -17,7 +17,7 @@ stages:
       - publishImageConfig:
           dockerfilePath: ./Dockerfile
           buildContext: .
-          tag: cp/${CICD_GIT_REPO_NAME}:${CICD_GIT_COMMIT}
+          tag: zvtz/${CICD_GIT_REPO_NAME}:${CICD_GIT_COMMIT}
           pushRemote: true
           registry: index.paas.zoomlion.com
         env:
